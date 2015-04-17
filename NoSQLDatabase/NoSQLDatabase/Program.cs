@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Remoting.Services;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -18,10 +19,11 @@ namespace NoSQLDatabase
             {
                 Console.WriteLine("Enter 1 to create a store");
                 Console.WriteLine("Enter 2 to create a document");
-                //Console.Write("Enter 3 to create a store"); 
+                Console.WriteLine("Enter 3 to read a document");
                 Console.WriteLine("Enter 0 to exit");
                 selection = Console.ReadLine();
                 string storeName;
+                string documentName;
                 switch (selection)
                 {
                     case "1":
@@ -31,53 +33,58 @@ namespace NoSQLDatabase
                         break;
                     case "2":
                         Console.WriteLine("Name your document");
-                        var documentName = Console.ReadLine();
+                        documentName = Console.ReadLine();
                         Console.WriteLine("Which store?");
                         storeName = Console.ReadLine();
-                        CreateDocument(documentName,storeName);
+                        Console.WriteLine("Document");
+                        var value = Console.ReadLine();
+                        CreateDocument(documentName,value,storeName);
+                        break;
+                    case "3":
+                        Console.WriteLine("Which document");
+                        documentName = Console.ReadLine();
+                        Console.WriteLine("Which store?");
+                        storeName = Console.ReadLine();
+                        Console.WriteLine(LoadData(documentName, storeName));
                         break;
                     default:
                         Console.WriteLine("Ok Thanks");
                         break;
                 }
             }
-           
-            
-
         }
 
         static void CreateStore(string storeName)
         {
-            WriteToFile("", storeName);
+            var pathString = @"C:\temp\" + storeName;
+            System.IO.Directory.CreateDirectory(pathString);
         }
 
-        static void LoadData(string storeName)
+        static string LoadData(string fileName, string storeName)
         {
-           //loop through list of documents in store and load content to collection
+            string content;
+            var filePath = @"C:\temp\" + storeName + @"\" + fileName + ".bin";
+            using (var binReader = new BinaryReader(File.Open(filePath, FileMode.Open)))
+            {
+                content = binReader.ReadString();
+            }
+
+            return content;
+            
         }
-        static void CreateDocument(string documentKey, string storeName)
+        static void CreateDocument(string key, string value,  string storeName)
         {
-            //check if Json
-
-            //add document name to store file
-            WriteToFile(documentKey + "|", storeName);
-
             //write document contents to file
-          
-         
+            WriteToFile(value, key, storeName);
         }
 
-        static void WriteToFile(string content, string fileName)
+        static void WriteToFile(string content, string fileName, string storeName)
         {
             try
             {
-                string filePath = @"C:\temp\" + fileName + ".bin";
-                //BinaryWriter bwStream = new BinaryWriter(new FileStream(filePath, FileMode.Create));
+                var filePath = @"C:\temp\" + storeName + @"\" + fileName + ".bin";
 
-                //Encoding ascii = Encoding.ASCII;
-                //BinaryWriter bwEncoder = new BinaryWriter(new FileStream(filePath, FileMode.Create), ascii);
-
-                using (BinaryWriter binWriter =
+                using (var binWriter =
                     new BinaryWriter(File.Open(filePath, FileMode.Create)))
                 {
                    binWriter.Write(content);
